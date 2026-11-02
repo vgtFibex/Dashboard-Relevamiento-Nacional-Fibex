@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Control Operativo Nacional</title>
+
+  <style>
+    :root {
+      --bg-color: #f1f5f9;
+      --card-bg: #ffffff;
+      --primary: #0f766e;
+      --primary-dark: #134e4a;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      
+      --bar-danger: #ef4444;
+      --bar-warning: #f59e0b;
+      --bar-success-light: #10b981;
+      --bar-success: #0f766e;
+    }
+    
+    * { box-sizing: border-box; }
+    
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text);
+      margin: 0;
+      padding: 24px;
+      display: flex;
+      justify-content: center;
+      font-weight: 700;
+    }
+
+    .main-container {
+      width: 100%;
+      max-width: 1366px; 
+    }
+    
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .header h1 {
+      margin: 0 0 4px 0;
+      font-size: 20px;
+      color: var(--primary-dark);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-weight: 900;
+    }
+    
+    /* === BARRA SUPERIOR UNIFICADA (FILTROS + KPIS) === */
+    .top-bar-unified {
+      display: flex;
+      gap: 12px;
+      align-items: flex-end;
+      margin-bottom: 24px;
+      width: 100%;
+      flex-wrap: wrap; 
+      padding-bottom: 8px;
+      position: relative;
+      z-index: 50; 
+    }
+
+    .compact-control {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      min-width: 170px;
+      flex: 0 0 auto;
+      position: relative;
+    }
+
+    .compact-control label {
+      font-size: 10px;
+      font-weight: 900;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      letter-spacing: 0.5px;
+    }
+
+    .compact-control select, .dropdown-select-box {
+      width: 100%;
+      padding: 0 10px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      font-size: 12px;
+      font-weight: 700;
+      background: #fff;
+      height: 38px;
+      outline: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .dropdown-select-box:after { content: '▼'; font-size: 10px; color: var(--text-muted); }
+    
+    .dropdown-content {
+      display: none; position: absolute; top: 100%; left: 0; right: 0; background: #fff;
+      border: 1px solid var(--border); border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      z-index: 100; margin-top: 4px; max-height: 220px; overflow-y: auto; padding: 8px; font-weight: 700;
+    }
+    
+    .dropdown-content.show { display: block; }
+    
+    .dropdown-actions {
+      display: flex; gap: 8px; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid var(--border);
+    }
+    
+    .dropdown-actions button {
+      font-size: 11px; padding: 4px 8px; cursor: pointer; background: #f1f5f9; border: 1px solid var(--border); border-radius: 4px; color: var(--text); flex: 1; font-weight: 700;
+    }
+    
+    .dropdown-actions button:hover { background: #e2e8f0; }
+    
+    .multi-select-option {
+      display: flex; align-items: center; gap: 8px; font-size: 12px; padding: 6px; cursor: pointer; border-radius: 4px; font-weight: 700;
+    }
+    .multi-select-option:hover { background: #f8fafc; }
+
+    .vertical-divider {
+      width: 1px;
+      background-color: var(--border);
+      height: 38px;
+      margin: 0 4px;
+      flex: 0 0 auto;
+    }
+
+    /* KPIs Compactos */
+    .compact-kpi {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 0 12px;
+      height: 38px;
+      min-width: max-content;
+      flex: 1 1 auto;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+    }
+
+    .compact-kpi-title {
+      font-size: 10px;
+      color: var(--text);
+      text-transform: uppercase;
+      font-weight: 900;
+      line-height: 1.2;
+    }
+
+    .compact-kpi-value {
+      font-size: 16px;
+      font-weight: 900;
+      color: var(--text);
+      line-height: 1.2;
+    }
+
+    .compact-kpi.highlight {
+      background: var(--primary);
+      border-color: var(--primary-dark);
+    }
+    .compact-kpi.highlight .compact-kpi-title,
+    .compact-kpi.highlight .compact-kpi-value {
+      color: white;
+    }
+    
+    /* === SECCIÓN DE TABLAS ESTILO EXCEL === */
+    .chart-container { 
+      background: var(--card-bg); 
+      border-radius: 8px; 
+      padding: 24px; 
+      border: 1px solid var(--border); 
+      margin-bottom: 24px; 
+      font-weight: 700;
+      position: relative;
+      z-index: 1;
+    }
+    
+    .chart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .chart-header h3 { margin: 0; font-size: 15px; font-weight: 900; color: var(--text); }
+    .chart-header span { font-weight: 700; }
+    
+    .custom-bar-grid-dual { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    
+    .table-responsive-wrapper { 
+      overflow-x: auto; 
+      border: 1px solid #cbd5e1;
+      border-radius: 8px; 
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      background: var(--card-bg);
+    }
+    
+    .custom-bar-list-tabular { display: flex; flex-direction: column; min-width: 500px; }
+
+    .tabular-header-row {
+      display: grid;
+      grid-template-columns: minmax(110px, 1.8fr) minmax(80px, 1.2fr) 0.8fr 0.8fr 0.8fr 0.8fr;
+      gap: 10px;
+      align-items: center;
+      padding: 10px 12px;
+      background-color: #e2e8f0; 
+      border-bottom: 2px solid var(--border);
+      border-radius: 8px 8px 0 0; 
+      font-size: 11px;
+      text-transform: uppercase;
+      font-weight: 900;
+      color: var(--text);
+      letter-spacing: 0.5px;
+    }
+
+    .tabular-header-row > div { text-align: center; }
+    .tabular-header-row > .col-name-header { text-align: left; }
+
+    .tabular-data-row {
+      display: grid;
+      grid-template-columns: minmax(110px, 1.8fr) minmax(80px, 1.2fr) 0.8fr 0.8fr 0.8fr 0.8fr;
+      gap: 10px;
+      align-items: center;
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--border);
+      font-size: 11px;
+      transition: background-color 0.15s;
+    }
+    
+    .tabular-data-row:hover { background-color: #f1f5f9; }
+    .tabular-data-row:last-child { border-bottom: none; }
+    
+    .col-sector {
+      font-weight: 900;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      text-align: left;
+    }
+
+    .col-bar {
+      width: 100%;
+      height: 18px; 
+      background-color: #e2e8f0;
+      border-radius: 4px;
+      overflow: hidden;
+      display: flex;
+      position: relative;
+    }
+
+    .bar-fill {
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding-right: 6px;
+      color: white;
+      font-size: 9px;
+      font-weight: 900;
+      transition: width 0.5s ease-in-out;
+    }
+
+    .bar-outer-text {
+      position: absolute;
+      left: 100%;
+      margin-left: 6px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 9px;
+      font-weight: 900;
+      color: var(--text);
+    }
+
+    .col-metric {
+      color: var(--text-muted);
+      font-weight: 700;
+      text-align: center; 
+    }
+    
+    .col-metric strong {
+      color: var(--text);
+      font-weight: 900;
+    }
+
+    .val-danger { background-color: var(--bar-danger); }
+    .val-warning { background-color: var(--bar-warning); }
+    .val-success-light { background-color: var(--bar-success-light); }
+    .val-success { background-color: var(--bar-success); }
+
+    @media (max-width: 1024px) {
+      .custom-bar-grid-dual { grid-template-columns: 1fr; }
+    }
+    
+    #loading-state { text-align: center; padding: 40px; font-size: 14px; color: var(--text); background: var(--card-bg); border-radius: 8px; border: 1px solid var(--border); font-weight: 700; }
+  </style>
+</head>
+<body>
+
+<div class="main-container">
+  <div class="header">
+    <div>
+      <h1 id="main-title">CONTROL OPERATIVO NACIONAL</h1>
+      <p id="current-date-label" style="margin: 0; color: var(--text); font-size: 13px; font-weight: 700;"></p>
+    </div>
+  </div>
+
+  <div id="loading-state">
+    <div>Consultando datos operativos y procesando métricas...</div>
+    <div id="debug-log" style="font-size: 12px; color: var(--text); margin-top: 8px; font-weight: 700;"></div>
+  </div>
+
+  <div id="dashboard-content" style="display: none;">
+    
+    <!-- BARRA SUPERIOR UNIFICADA -->
+    <div class="top-bar-unified">
+      <!-- Filtros -->
+      <div class="compact-control">
+        <label for="filter-zona">1. Proyectos</label>
+        <select id="filter-zona" onchange="onZonaChange()">
+          <option value="ALL">Todos los Proyectos</option>
+        </select>
+      </div>
+      
+      <div class="compact-control">
+        <label>2. Zonas (Sectores Únicos)</label>
+        <div id="dropdown-box" class="dropdown-select-box" onclick="toggleDropdown(event)">
+          <span id="dropdown-label">Cargando...</span>
+        </div>
+        <div id="dropdown-content" class="dropdown-content">
+          <div class="dropdown-actions">
+            <button type="button" onclick="toggleAllSectors(true)">Marcar Todos</button>
+            <button type="button" onclick="toggleAllSectors(false)">Desmarcar</button>
+          </div>
+          <div id="filter-sector-container"></div>
+        </div>
+      </div>
+
+      <div class="vertical-divider"></div>
+
+      <!-- KPIs Compactos -->
+      <div class="compact-kpi">
+        <span class="compact-kpi-title">Sectores</span>
+        <span class="compact-kpi-value" id="kpi-registros">0</span>
+      </div>
+      <div class="compact-kpi">
+        <span class="compact-kpi-title">HP</span>
+        <span class="compact-kpi-value" id="kpi-hp">0</span>
+      </div>
+      <div class="compact-kpi">
+        <span class="compact-kpi-title">Condominios</span>
+        <span class="compact-kpi-value" id="kpi-condos">0</span>
+      </div>
+      <div class="compact-kpi">
+        <span class="compact-kpi-title">HP x Condominio</span>
+        <span class="compact-kpi-value" id="kpi-estimado-hp">0</span>
+      </div>
+      <div class="compact-kpi">
+        <span class="compact-kpi-title">Pymes</span>
+        <span class="compact-kpi-value" id="kpi-ductos">0</span>
+      </div>
+      <div class="compact-kpi highlight">
+        <span class="compact-kpi-title">% Avance</span>
+        <span class="compact-kpi-value" id="kpi-avance">0%</span>
+      </div>
+    </div>
+
+    <!-- SECCIÓN DE TABLA ESTILO EXCEL -->
+    <div class="chart-container">
+      <div class="chart-header">
+        <h3 id="chart-title-label">Estatus de Relevamiento por Proyecto</h3>
+        <span style="font-size: 12px; color: var(--text); font-weight: 700;">Ordenado por prioridad (Menor a Mayor)</span>
+      </div>
+      
+      <div class="custom-bar-grid-dual">
+        
+        <!-- Columna Izquierda -->
+        <div class="table-responsive-wrapper">
+          <div class="custom-bar-list-tabular">
+            <div class="tabular-header-row">
+              <div class="col-name-header">Proyecto</div>
+              <div>Progreso</div>
+              <div title="HP">HP</div>
+              <div title="Condominios">Condos</div>
+              <div title="HP x Condominio">HP x Cond.</div>
+              <div title="Pymes">Pymes</div>
+            </div>
+            <div id="tabular-data-container-1"></div>
+          </div>
+        </div>
+
+        <!-- Columna Derecha -->
+        <div class="table-responsive-wrapper">
+          <div class="custom-bar-list-tabular">
+            <div class="tabular-header-row">
+              <div class="col-name-header">Proyecto</div>
+              <div>Progreso</div>
+              <div title="HP">HP</div>
+              <div title="Condominios">Condos</div>
+              <div title="HP x Condominio">HP x Cond.</div>
+              <div title="Pymes">Pymes</div>
+            </div>
+            <div id="tabular-data-container-2"></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+  <script>
+    const SPREADSHEET_ID = '1A-1k3kKXJVbfQRMwBn7F2QWSOPn7Eq9-iAKQxFJoLvo';
+
+    let rawZonasRecords = [];
+    let statusZonasLoaded = false;
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    document.getElementById('current-date-label').innerText = `Fecha de consulta: ${today.toLocaleDateString('es-VE')}`;
+
+    window.addEventListener('DOMContentLoaded', () => {
+      fetchSheetData('Hoja 1', 'handleZonasResponse');
+
+      window.addEventListener('click', (e) => {
+        const dropdown = document.getElementById('dropdown-content');
+        const box = document.getElementById('dropdown-box');
+        if (!box.contains(e.target) && !dropdown.contains(e.target)) {
+          dropdown.classList.remove('show');
+        }
+      });
+    });
+
+    function toggleDropdown(e) {
+      e.stopPropagation();
+      document.getElementById('dropdown-content').classList.toggle('show');
+    }
+
+    function logDebug(msg) {
+      const dbg = document.getElementById('debug-log');
+      if(dbg) dbg.innerHTML += `<br>• ${msg}`;
+    }
+
+    function fetchSheetData(sheetName, callbackName) {
+      const script = document.createElement('script');
+      script.src = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=responseHandler:${callbackName}&sheet=${encodeURIComponent(sheetName)}&tq=${encodeURIComponent('select *')}&range=A1:Z5000&headers=1`;
+      script.onerror = () => { 
+        logDebug(`<span style="color:#dc2626;">Error crítico al cargar origen de datos.</span>`);
+      };
+      document.body.appendChild(script);
+    }
+
+    window.handleZonasResponse = function(response) {
+      if (response && response.table) {
+        parseZonasData(response.table);
+        statusZonasLoaded = true;
+        checkInitialization();
+      }
+    };
+
+    function cleanSectorName(name) {
+      if (!name) return '';
+      return name.trim();
+    }
+
+    function parseZonasData(table) {
+      const getVal = (row, idx) => {
+        if (idx === -1 || !row.c || !row.c[idx]) return '';
+        const cell = row.c[idx];
+        return cell.v !== null ? cell.v : (cell.f !== undefined ? cell.f : '');
+      };
+      
+      const parseClean = (val) => isNaN(parseFloat(String(val).replace(/,/g, ''))) ? 0 : parseFloat(String(val).replace(/,/g, ''));
+      
+      const parsePct = (val) => {
+        if (!val) return 0;
+        let n = parseFloat(String(val).replace('%', '').replace(/,/g, ''));
+        return isNaN(n) ? 0 : (n <= 1 && n > 0 ? n * 100 : n);
+      };
+
+      let headers = [];
+      if (table.cols) {
+        headers = table.cols.map(col => col && col.label ? col.label.trim().toUpperCase() : '');
+      }
+
+      const findIndex = (names) => {
+        for (let name of names) {
+          const idx = headers.indexOf(name);
+          if (idx !== -1) return idx;
+        }
+        return -1;
+      }
+
+      const iProy = findIndex(['PROYECTO']) !== -1 ? findIndex(['PROYECTO']) : 2; 
+      const iZona = findIndex(['ZONA (OZMAP ID)']) !== -1 ? findIndex(['ZONA (OZMAP ID)']) : 5;
+      const iAva = findIndex(['% RELEVAMIENTO']) !== -1 ? findIndex(['% RELEVAMIENTO']) : 12;
+      const iHp = findIndex(['HP']) !== -1 ? findIndex(['HP']) : 15;
+      const iCon = findIndex(['CONDOMINIOS']) !== -1 ? findIndex(['CONDOMINIOS']) : 16;
+      const iEst = findIndex(['HP X CONDOMINIO']) !== -1 ? findIndex(['HP X CONDOMINIO']) : 17;
+      const iDuc = findIndex(['PYMES']) !== -1 ? findIndex(['PYMES']) : 18;
+
+      const grouped = {};
+
+      table.rows.forEach((r) => {
+        if (!r.c) return;
+        const zonaHub = String(getVal(r, iProy)).trim();
+        const rawSector = String(getVal(r, iZona)).trim();
+        const sectorClean = cleanSectorName(rawSector);
+        
+        const avance = parsePct(getVal(r, iAva));
+        const hp = parseClean(getVal(r, iHp));
+        const condos = parseClean(getVal(r, iCon));
+        const estimadoHp = parseClean(getVal(r, iEst));
+        const ductos = parseClean(getVal(r, iDuc));
+
+        if (rawSector && rawSector !== 'ZONA (OZMAP ID)') {
+          const key = zonaHub + '|' + sectorClean;
+          
+          if (!grouped[key]) {
+            grouped[key] = {
+              zonaHub: zonaHub || 'Sin Proyecto', sector: sectorClean, avanceSum: avance, hpSum: hp, condosSum: condos,
+              estimadoHpSum: estimadoHp, ductosSum: ductos, count: 1
+            };
+          } else {
+            grouped[key].avanceSum += avance; grouped[key].hpSum += hp; grouped[key].condosSum += condos;
+            grouped[key].estimadoHpSum += estimadoHp; grouped[key].ductosSum += ductos; grouped[key].count += 1;
+          }
+        }
+      });
+
+      rawZonasRecords = Object.values(grouped).map((g, idx) => ({
+        rowNum: idx + 1,
+        zonaHub: g.zonaHub,
+        sector: g.sector,
+        avance: Math.round(g.avanceSum / g.count), 
+        hp: g.hpSum, condos: g.condosSum, estimadoHp: g.estimadoHpSum, ductos: g.ductosSum
+      }));
+    }
+
+    function checkInitialization() {
+      if (statusZonasLoaded) {
+        populateZonaFilter();
+        applyFilters();
+        document.getElementById('loading-state').style.display = 'none';
+        document.getElementById('dashboard-content').style.display = 'block';
+      }
+    }
+
+    function populateZonaFilter() {
+      const zonas = [...new Set(rawZonasRecords.map(r => r.zonaHub))].filter(Boolean).sort();
+      const zonaSelect = document.getElementById('filter-zona');
+      zonaSelect.innerHTML = '<option value="ALL">Todos los Proyectos</option>';
+      zonas.forEach(z => {
+        const opt = document.createElement('option');
+        opt.value = z; opt.innerText = z; zonaSelect.appendChild(opt);
+      });
+      populateSectorCheckboxes('ALL');
+    }
+
+    function populateSectorCheckboxes(selectedZona) {
+      const container = document.getElementById('filter-sector-container');
+      container.innerHTML = '';
+
+      let filteredSectors = rawZonasRecords;
+      if (selectedZona !== 'ALL') {
+        filteredSectors = rawZonasRecords.filter(r => r.zonaHub === selectedZona);
+      }
+
+      const sortedSectors = [...filteredSectors].sort((a, b) => a.sector.localeCompare(b.sector));
+      
+      sortedSectors.forEach(s => {
+        const label = document.createElement('label');
+        label.className = 'multi-select-option';
+        let displayText = selectedZona === 'ALL' ? `${s.sector} <span style="color:var(--text); font-size:10px; margin-left:4px; font-weight:700;">(${s.zonaHub})</span>` : s.sector;
+        label.innerHTML = `<input type="checkbox" value="${s.rowNum}" checked onchange="applyFilters()"> <span>${displayText}</span>`;
+        container.appendChild(label);
+      });
+      updateDropdownLabel();
+    }
+
+    function toggleAllSectors(selectStatus) {
+      document.querySelectorAll('#filter-sector-container input[type="checkbox"]').forEach(cb => cb.checked = selectStatus);
+      applyFilters();
+    }
+
+    function onZonaChange() {
+      populateSectorCheckboxes(document.getElementById('filter-zona').value);
+      applyFilters();
+    }
+
+    function updateDropdownLabel() {
+      const checkboxes = document.querySelectorAll('#filter-sector-container input[type="checkbox"]');
+      const checked = document.querySelectorAll('#filter-sector-container input[type="checkbox"]:checked');
+      
+      const label = document.getElementById('dropdown-label');
+      const totalCount = checkboxes.length;
+      const checkedCount = checked.length;
+
+      if (checkedCount === 0) {
+        label.innerHTML = '⚠️ Ninguno (0)';
+        label.style.color = '#ef4444';
+      } else if (checkedCount === totalCount) {
+        label.innerHTML = `✓ Todos Visibles (${totalCount})`;
+        label.style.color = 'var(--primary-dark)';
+      } else {
+        label.innerHTML = `⚠️ Seleccionados: ${checkedCount} de ${totalCount}`;
+        label.style.color = '#b45309';
+      }
+    }
+
+    function applyFilters() {
+      const zonaVal = document.getElementById('filter-zona').value;
+      const selectedRowNums = Array.from(document.querySelectorAll('#filter-sector-container input[type="checkbox"]:checked')).map(cb => parseInt(cb.value));
+
+      updateDropdownLabel();
+
+      const filtered = rawZonasRecords.filter(r => {
+        return (zonaVal === 'ALL' || r.zonaHub === zonaVal) && selectedRowNums.includes(r.rowNum);
+      });
+
+      renderDashboard(filtered, zonaVal);
+    }
+
+    function getBarColorClass(avance) {
+      if (avance < 50) return 'val-danger';
+      if (avance < 80) return 'val-warning';
+      if (avance < 100) return 'val-success-light';
+      return 'val-success';
+    }
+
+    function renderDashboard(filteredZonas, zonaVal) {
+      const totalRegistros = filteredZonas.length; 
+      const mainTitle = document.getElementById('main-title');
+      const zonaUp = String(zonaVal).toUpperCase();
+
+      const uniqueProjectsCount = new Set(filteredZonas.map(r => r.zonaHub)).size;
+
+      if (zonaVal === 'ALL') {
+        mainTitle.innerText = `CONTROL OPERATIVO NACIONAL — PROYECTOS (${uniqueProjectsCount})`;
+      } else {
+        mainTitle.innerText = `PROYECTO — ${zonaUp}`;
+      }
+
+      const avgAvance = totalRegistros > 0 ? (filteredZonas.reduce((acc, r) => acc + r.avance, 0) / totalRegistros).toFixed(1) : 0;
+
+      document.getElementById('kpi-registros').innerText = totalRegistros;
+      document.getElementById('kpi-hp').innerText = filteredZonas.reduce((a, r) => a + r.hp, 0).toLocaleString('es-VE');
+      document.getElementById('kpi-condos').innerText = filteredZonas.reduce((a, r) => a + r.condos, 0).toLocaleString('es-VE');
+      document.getElementById('kpi-estimado-hp').innerText = filteredZonas.reduce((a, r) => a + r.estimadoHp, 0).toLocaleString('es-VE');
+      document.getElementById('kpi-ductos').innerText = filteredZonas.reduce((a, r) => a + r.ductos, 0).toLocaleString('es-VE');
+      document.getElementById('kpi-avance').innerText = `${avgAvance}%`;
+      
+      let displayRecords = [];
+
+      if (zonaVal === 'ALL') {
+        const projectGroups = {};
+        filteredZonas.forEach(r => {
+          if (!projectGroups[r.zonaHub]) {
+            projectGroups[r.zonaHub] = {
+              name: r.zonaHub,
+              avanceSum: r.avance,
+              count: 1,
+              hp: r.hp, condos: r.condos, estimadoHp: r.estimadoHp, ductos: r.ductos
+            };
+          } else {
+            projectGroups[r.zonaHub].avanceSum += r.avance;
+            projectGroups[r.zonaHub].count += 1;
+            projectGroups[r.zonaHub].hp += r.hp;
+            projectGroups[r.zonaHub].condos += r.condos;
+            projectGroups[r.zonaHub].estimadoHp += r.estimadoHp;
+            projectGroups[r.zonaHub].ductos += r.ductos;
+          }
+        });
+
+        displayRecords = Object.values(projectGroups).map(p => ({
+          name: p.name,
+          avance: Math.round(p.avanceSum / p.count),
+          hp: p.hp, condos: p.condos, estimadoHp: p.estimadoHp, ductos: p.ductos
+        }));
+
+        document.getElementById('chart-title-label').innerText = `Estatus de Relevamiento por Proyecto (${displayRecords.length})`;
+        document.querySelectorAll('.col-name-header').forEach(el => el.innerText = 'Proyecto');
+
+      } else {
+        displayRecords = filteredZonas.map(r => ({
+          name: r.sector,
+          avance: r.avance,
+          hp: r.hp, condos: r.condos, estimadoHp: r.estimadoHp, ductos: r.ductos
+        }));
+
+        document.getElementById('chart-title-label').innerText = `Estatus de Relevamiento por Zona (${displayRecords.length})`;
+        document.querySelectorAll('.col-name-header').forEach(el => el.innerText = 'Zona');
+      }
+      
+      displayRecords.sort((a, b) => {
+        if (a.avance !== b.avance) return a.avance - b.avance;
+        return a.name.localeCompare(b.name);
+      });
+
+      let midPoint = Math.ceil(displayRecords.length / 2);
+      let list1Html = '', list2Html = '';
+
+      displayRecords.forEach((r, i) => {
+        let width = r.avance > 0 ? r.avance : 0;
+        if (width > 100) width = 100;
+        let colorClass = getBarColorClass(width);
+        
+        let innerText = width > 20 ? `${width}%` : '';
+        let outerText = width <= 20 ? `<span class="bar-outer-text">${width}%</span>` : '';
+
+        let rowHtml = `
+          <div class="tabular-data-row">
+            <div class="col-sector" title="${r.name}">${r.name}</div>
+            <div class="col-bar">
+              <div class="bar-fill ${colorClass}" style="width: ${width}%;">${innerText}</div>
+              ${outerText}
+            </div>
+            <div class="col-metric"><strong>${r.hp.toLocaleString('es-VE')}</strong></div>
+            <div class="col-metric"><strong>${r.condos.toLocaleString('es-VE')}</strong></div>
+            <div class="col-metric"><strong>${r.estimadoHp.toLocaleString('es-VE')}</strong></div>
+            <div class="col-metric"><strong>${r.ductos.toLocaleString('es-VE')}</strong></div>
+          </div>
+        `;
+
+        if (i < midPoint) list1Html += rowHtml;
+        else list2Html += rowHtml;
+      });
+
+      document.getElementById('tabular-data-container-1').innerHTML = list1Html;
+      document.getElementById('tabular-data-container-2').innerHTML = list2Html;
+    }
+  </script>
+</body>
+</html>
